@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-10-31T03:08:47.386278+00:00",
-  "total_records": 4,
+  "generated_at": "2026-10-31T06:31:42.614743+00:00",
+  "total_records": 5,
   "metrics": {
     "total_earnings_usd": 3000.0,
-    "total_records": 4,
+    "total_records": 5,
     "total_resolved": 2,
     "total_rewarded": 1,
     "total_duplicates": 1,
@@ -15,15 +15,15 @@
       "failure": 1,
       "playbook": 1,
       "success": 1,
-      "target_profile": 1
+      "target_profile": 2
     },
     "counts_by_status": {
       "Duplicate": 1,
-      "Hunting": 2,
+      "Hunting": 3,
       "Rewarded": 1
     },
     "counts_by_platform": {
-      "Bugcrowd": 1,
+      "Bugcrowd": 2,
       "HackerOne": 2,
       "Other": 1
     },
@@ -35,12 +35,12 @@
     "counts_by_severity": {
       "High": 2,
       "Medium": 1,
-      "None": 1
+      "None": 2
     },
     "counts_by_vuln_class": {
       "CWE-362: Race Condition": 1,
       "CWE-639: IDOR": 2,
-      "N/A": 1
+      "N/A": 2
     },
     "bounty_by_vuln_class": {
       "CWE-362: Race Condition": 0.0,
@@ -49,20 +49,20 @@
     },
     "counts_by_root_cause": {
       "Access Control": 2,
-      "N/A": 1,
+      "N/A": 2,
       "Race Condition": 1
     },
     "top_techniques": {
       "parameter-tampering": 2,
       "horizontal-privilege-escalation": 2,
+      "asset-discovery": 2,
+      "tech-stack-fingerprinting": 2,
+      "api-surface-mapping": 2,
       "parallel-requests": 1,
       "coupon-abuse": 1,
       "limit-overrun": 1,
       "uuid-enumeration": 1,
-      "vertical-privilege-escalation": 1,
-      "uuid-prediction": 1,
-      "api-enumeration": 1,
-      "asset-discovery": 1
+      "vertical-privilege-escalation": 1
     }
   },
   "records": [
@@ -166,6 +166,33 @@
         "Billing and background export queues have historically contained tenant authorization flaws."
       ],
       "file_path": "targets/TGT-ACME-01.md"
+    },
+    {
+      "id": "TGT-ONEWEB-01",
+      "title": "OneWeb Platform Profile (Web.com & Newfold Digital)",
+      "target": "Web.com Group / Newfold Digital",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "target_profile",
+      "status": "Hunting",
+      "severity": "None",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "N/A",
+      "root_cause_category": "N/A",
+      "failure_reason": null,
+      "techniques": [
+        "asset-discovery",
+        "tech-stack-fingerprinting",
+        "api-surface-mapping",
+        "oauth-discovery",
+        "microfrontend-analysis"
+      ],
+      "lessons_learned": [
+        "OneWeb is a shared white-label platform across Web.com, Network Solutions, Bluehost, and HostGator.",
+        "IdentityServer4 (ids4.builderservices.io) federates all microservice tokens and AI scopes."
+      ],
+      "file_path": "targets/TGT-ONEWEB-01.md"
     }
   ]
 }

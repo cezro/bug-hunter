@@ -1,5 +1,5 @@
 # Bug Bounty Knowledge Base Index & Analytics
-*Auto-compiled on 2026-10-31 03:08:47 UTC*
+*Auto-compiled on 2026-10-31 06:31:42 UTC*
 
 ## Executive Performance Summary
 
@@ -7,7 +7,7 @@
 - **Win Rate (Rewarded / Resolved):** `50.0%` (1/2)
 - **Duplicate Rate:** `50.0%` (1/2)
 - **Average Bounty per Rewarded Bug:** `$3,000.00`
-- **Total Tracked Records:** `4`
+- **Total Tracked Records:** `5`
 
 ---
 
@@ -15,7 +15,7 @@
 
 | Platform | Findings | Total Bounty ($) | Avg Bounty ($) |
 | :--- | :---: | :---: | :---: |
-| Bugcrowd | 1 | $0.00 | $0.00 |
+| Bugcrowd | 2 | $0.00 | $0.00 |
 | HackerOne | 2 | $3,000.00 | $1,500.00 |
 | Other | 1 | $0.00 | $0.00 |
 
@@ -25,14 +25,14 @@
 | :--- | :---: | :---: |
 | CWE-362: Race Condition | 1 | $0.00 |
 | CWE-639: IDOR | 2 | $3,000.00 |
-| N/A | 1 | $0.00 |
+| N/A | 2 | $0.00 |
 
 ## Status Distribution
 
 | Status | Count |
 | :--- | :---: |
 | Duplicate | 1 |
-| Hunting | 2 |
+| Hunting | 3 |
 | Rewarded | 1 |
 
 ---
@@ -45,6 +45,7 @@
 | `PB-IDOR-01` | Broken Object Level Authorization (IDOR) Tactical Playbook | Universal Web Applications | Other | `playbook` | `Hunting` | High | - | $0 | CWE-639: IDOR | [knowledge-base/vuln-playbooks/idor-access-control.md](../knowledge-base/vuln-playbooks/idor-access-control.md) |
 | `TGT-ACME-01` | Acme Cloud Services Target Profile | Acme Cloud Services | HackerOne | `target_profile` | `Hunting` | None | - | $0 | N/A | [targets/TGT-ACME-01.md](../targets/TGT-ACME-01.md) |
 | `KB-2026-002` | Duplicate Race Condition on Checkout Voucher Redemption | MegaStore E-Commerce | Bugcrowd | `failure` | `Duplicate` | Medium | 5.3 | $0 | CWE-362: Race Condition | [knowledge-base/failures/KB-2026-002.md](../knowledge-base/failures/KB-2026-002.md) |
+| `TGT-ONEWEB-01` | OneWeb Platform Profile (Web.com & Newfold Digital) | Web.com Group / Newfold Digital | Bugcrowd | `target_profile` | `Hunting` | None | - | $0 | N/A | [targets/TGT-ONEWEB-01.md](../targets/TGT-ONEWEB-01.md) |
 
 ---
 
@@ -64,3 +65,7 @@
 ### `KB-2026-002` - Duplicate Race Condition on Checkout Voucher Redemption (MegaStore E-Commerce)
 - Public promotional campaigns on large e-commerce platforms attract dozens of hunters within 6 hours.
 - Automated single-packet race tooling gives specialized hunters a major speed advantage on generic endpoints.
+
+### `TGT-ONEWEB-01` - OneWeb Platform Profile (Web.com & Newfold Digital) (Web.com Group / Newfold Digital)
+- OneWeb is a shared white-label platform across Web.com, Network Solutions, Bluehost, and HostGator.
+- IdentityServer4 (ids4.builderservices.io) federates all microservice tokens and AI scopes.
