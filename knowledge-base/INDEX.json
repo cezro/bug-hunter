@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-10-31T02:50:04.144352+00:00",
+  "total_records": 4,
+  "metrics": {
+    "total_earnings_usd": 3000.0,
+    "total_records": 4,
+    "total_resolved": 2,
+    "total_rewarded": 1,
+    "total_duplicates": 1,
+    "win_rate_percent": 50.0,
+    "duplicate_rate_percent": 50.0,
+    "average_reward_usd": 3000.0,
+    "counts_by_type": {
+      "failure": 1,
+      "playbook": 1,
+      "success": 1,
+      "target_profile": 1
+    },
+    "counts_by_status": {
+      "Duplicate": 1,
+      "Hunting": 2,
+      "Rewarded": 1
+    },
+    "counts_by_platform": {
+      "Bugcrowd": 1,
+      "HackerOne": 2,
+      "Other": 1
+    },
+    "bounty_by_platform": {
+      "Bugcrowd": 0.0,
+      "HackerOne": 3000.0,
+      "Other": 0.0
+    },
+    "counts_by_severity": {
+      "High": 2,
+      "Medium": 1,
+      "None": 1
+    },
+    "counts_by_vuln_class": {
+      "CWE-362: Race Condition": 1,
+      "CWE-639: IDOR": 2,
+      "N/A": 1
+    },
+    "bounty_by_vuln_class": {
+      "CWE-362: Race Condition": 0.0,
+      "CWE-639: IDOR": 3000.0,
+      "N/A": 0.0
+    },
+    "counts_by_root_cause": {
+      "Access Control": 2,
+      "N/A": 1,
+      "Race Condition": 1
+    },
+    "top_techniques": {
+      "parameter-tampering": 2,
+      "horizontal-privilege-escalation": 2,
+      "parallel-requests": 1,
+      "coupon-abuse": 1,
+      "limit-overrun": 1,
+      "uuid-enumeration": 1,
+      "vertical-privilege-escalation": 1,
+      "uuid-prediction": 1,
+      "api-enumeration": 1,
+      "asset-discovery": 1
+    }
+  },
+  "records": [
+    {
+      "id": "KB-2026-002",
+      "title": "Duplicate Race Condition on Checkout Voucher Redemption",
+      "target": "MegaStore E-Commerce",
+      "platform": "Bugcrowd",
+      "date": "2026-04-05",
+      "type": "failure",
+      "status": "Duplicate",
+      "severity": "Medium",
+      "cvss_score": 5.3,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-362: Race Condition",
+      "root_cause_category": "Race Condition",
+      "failure_reason": "Duplicate (Speed)",
+      "techniques": [
+        "parallel-requests",
+        "coupon-abuse",
+        "limit-overrun"
+      ],
+      "lessons_learned": [
+        "Public promotional campaigns on large e-commerce platforms attract dozens of hunters within 6 hours.",
+        "Automated single-packet race tooling gives specialized hunters a major speed advantage on generic endpoints."
+      ],
+      "file_path": "knowledge-base/failures/KB-2026-002.md"
+    },
+    {
+      "id": "KB-2026-001",
+      "title": "BOLA / IDOR in Organization Invoice Export Worker",
+      "target": "Acme Cloud Services",
+      "platform": "HackerOne",
+      "date": "2026-03-12",
+      "type": "success",
+      "status": "Rewarded",
+      "severity": "High",
+      "cvss_score": 8.5,
+      "bounty_payout": 3000.0,
+      "vuln_class": "CWE-639: IDOR",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "uuid-enumeration",
+        "horizontal-privilege-escalation"
+      ],
+      "lessons_learned": [
+        "Asynchronous background export workers frequently bypass HTTP API gateway auth filters.",
+        "Always test UUID parameters across multiple organization contexts to identify unvalidated tenancy scopes."
+      ],
+      "file_path": "knowledge-base/successes/KB-2026-001.md"
+    },
+    {
+      "id": "PB-IDOR-01",
+      "title": "Broken Object Level Authorization (IDOR) Tactical Playbook",
+      "target": "Universal Web Applications",
+      "platform": "Other",
+      "date": "2026-03-01",
+      "type": "playbook",
+      "status": "Hunting",
+      "severity": "High",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-639: IDOR",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "horizontal-privilege-escalation",
+        "vertical-privilege-escalation",
+        "uuid-prediction",
+        "api-enumeration"
+      ],
+      "lessons_learned": [
+        "Target secondary actions (export, print, sync, restore) rather than primary CRUD routes.",
+        "Test parameter wrapping: arrays, nested JSON, and query string overrides on POST requests."
+      ],
+      "file_path": "knowledge-base/vuln-playbooks/idor-access-control.md"
+    },
+    {
+      "id": "TGT-ACME-01",
+      "title": "Acme Cloud Services Target Profile",
+      "target": "Acme Cloud Services",
+      "platform": "HackerOne",
+      "date": "2026-03-01",
+      "type": "target_profile",
+      "status": "Hunting",
+      "severity": "None",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "N/A",
+      "root_cause_category": "N/A",
+      "failure_reason": null,
+      "techniques": [
+        "asset-discovery",
+        "tech-stack-fingerprinting",
+        "api-surface-mapping"
+      ],
+      "lessons_learned": [
+        "Billing and background export queues have historically contained tenant authorization flaws."
+      ],
+      "file_path": "targets/TGT-ACME-01.md"
+    }
+  ]
+}
