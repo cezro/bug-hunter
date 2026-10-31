@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "agent-reach": {
+      "source": "Panniantong/agent-reach",
+      "sourceType": "github",
+      "skillPath": "agent_reach/skill/SKILL.md",
+      "computedHash": "683e6d21f15ab998863d32c85a4280574566daa8cfcf3aeca6186da172239d4f"
+    },
+    "bb-methodology": {
+      "source": "elementalsouls/claude-bughunter",
+      "sourceType": "github",
+      "skillPath": "skills/bb-methodology/SKILL.md",
+      "computedHash": "987f83b6dc1a4b5656fbf223ac0ea29e8018f930c1826f19d2c6afdf20e0d6ba"
+    },
+    "bug-hunt-swarm": {
+      "source": "dimillian/skills",
+      "sourceType": "github",
+      "skillPath": "bug-hunt-swarm/SKILL.md",
+      "computedHash": "1c5954a9403f79dc39fe4e78ee4a2489b3a2798f7757c5eb7618121aab76c5e3"
+    },
+    "report-writing": {
+      "source": "elementalsouls/claude-bughunter",
+      "sourceType": "github",
+      "skillPath": "skills/report-writing/SKILL.md",
+      "computedHash": "75dc220e86f0ec2fc1d3f6234791dbce3b3a75c15788df108f8380168edb67c1"
+    },
+    "security-bounty-hunter": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/security-bounty-hunter/SKILL.md",
+      "computedHash": "8fb0e05278d01d4f55fc486b7ef70b06beee1fdf3dd98eb39fae9d651c723256"
+    },
+    "subagent-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/subagent-driven-development/SKILL.md",
+      "computedHash": "eb19d7078aeabe22efa59d74b1141d40a4e3d8be4f5c7a3a4f8d7998abf50f5b"
+    },
+    "triage-validation": {
+      "source": "elementalsouls/claude-bughunter",
+      "sourceType": "github",
+      "skillPath": "skills/triage-validation/SKILL.md",
+      "computedHash": "669c72b5c11fe9f4ff9fc2a36e59e102894b6bf70a5d90805b81577433fc2e28"
+    }
+  }
+}
