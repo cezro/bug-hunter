@@ -2,7 +2,7 @@
 id: {{ID}}
 title: "{{TITLE}}"
 target: "{{TARGET}}"
-platform: HackerOne
+platform: {{PLATFORM}}
 date: {{DATE}}
 type: investigation
 status: Hunting

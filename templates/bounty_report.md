@@ -2,9 +2,9 @@
 id: {{ID}}
 title: "{{TITLE}}"
 target: "{{TARGET}}"
-platform: HackerOne
+platform: {{PLATFORM}}
 date: {{DATE}}
-type: investigation
+type: report
 status: In-Triage
 severity: High
 cvss_score: 8.5

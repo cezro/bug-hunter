@@ -55,7 +55,7 @@ Every markdown record tracked by the indexing system must begin with YAML frontm
 | `target` | `string` | **Yes** | Non-empty string (e.g. `Acme Corp`, `Shopify`) | Name of target organization or program. |
 | `platform` | `string` | **Yes** | `HackerOne`, `Bugcrowd`, `Intigriti`, `Immunefi`, `Direct/Private`, `Other` | Bug bounty platform host or engagement model. |
 | `date` | `string` | **Yes** | Format: `YYYY-MM-DD` | Date of discovery, submission, or creation. |
-| `type` | `string` | **Yes** | `success`, `failure`, `target_profile`, `investigation`, `playbook` | Category classification of the record. |
+| `type` | `string` | **Yes** | `success`, `failure`, `target_profile`, `investigation`, `playbook`, `report` | Category classification of the record. |
 | `status` | `string` | **Yes** | `Hunting`, `In-Triage`, `Rewarded`, `Duplicate`, `Informative`, `Rejected`, `Out-of-Scope` | Current operational lifecycle status. |
 | `severity` | `string` | **Yes** | `Critical`, `High`, `Medium`, `Low`, `None` | Assessed or awarded severity level. |
 | `cvss_score` | `float \| null` | **Yes** | `0.0` to `10.0` or `null` | CVSS v3.1 base score (e.g., `8.5`). |
@@ -75,7 +75,7 @@ The `index_manager.py` validator enforces strict invariant rules:
 1. **Failure Justification Rule:**  
    If `type == "failure"` or `status` is one of `{"Duplicate", "Rejected", "Out-of-Scope", "Informative"}`, `failure_reason` **MUST NOT** be `null` and must match one of the standard failure reasons.
 2. **Bounty Consistency Rule:**  
-   If `status == "Rewarded"`, `bounty_payout` must be greater than 0 unless explicitly marked as a volunteer/swag-only reward (`bounty_payout: 0` with an explanatory note).
+   If `status == "Rewarded"`, `bounty_payout` must be strictly greater than 0. If `status` is one of `{"Duplicate", "Rejected", "Out-of-Scope", "Informative", "Hunting", "In-Triage"}`, `bounty_payout` must be strictly 0.
 3. **Score Boundary Rule:**  
    `cvss_score` must fall strictly within `0.0 <= cvss_score <= 10.0`, or be set to `null` if CVSS is not applicable (e.g., target profiles or playbooks).
 4. **Identifier Namespace Standard:**

@@ -2,7 +2,7 @@
 id: {{ID}}
 title: "{{TITLE}}"
 target: "{{TARGET}}"
-platform: HackerOne
+platform: {{PLATFORM}}
 date: {{DATE}}
 type: target_profile
 status: Hunting
@@ -23,7 +23,7 @@ lessons_learned:
 # Target Profile: {{TARGET}}
 
 ## 1. Program Summary & Safe Harbor
-- **Platform:** HackerOne
+- **Platform:** {{PLATFORM}}
 - **Program Type:** Public / Private Bug Bounty
 - **Safe Harbor Status:** Full Safe Harbor (Gold Standard)
 - **Policy URL:** https://hackerone.com/{{TARGET_SLUG}}

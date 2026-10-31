@@ -2,7 +2,7 @@
 id: {{ID}}
 title: "{{TITLE}}"
 target: "{{TARGET}}"
-platform: Bugcrowd
+platform: {{PLATFORM}}
 date: {{DATE}}
 type: failure
 status: Duplicate

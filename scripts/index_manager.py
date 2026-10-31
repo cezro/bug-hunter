@@ -2,7 +2,7 @@
 """
 Bug Bounty Knowledge Base & Data Indexing Manager.
 
-Standard Library ONLY: json, pathlib, re, argparse, dataclasses, datetime, sys.
+Standard Library ONLY: json, pathlib, re, argparse, dataclasses, datetime, math, sys.
 Python 3.14+ compatible.
 """
 
@@ -12,6 +12,7 @@ import argparse
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import json
+import math
 from pathlib import Path
 import re
 import sys
@@ -36,6 +37,7 @@ ALLOWED_TYPES = {
     "target_profile",
     "investigation",
     "playbook",
+    "report",
 }
 
 ALLOWED_STATUSES = {
@@ -83,6 +85,15 @@ ALLOWED_FAILURE_REASONS = {
     "Insufficient Impact",
 }
 
+TYPE_ID_PREFIX_MAPPING = {
+    "success": {"KB"},
+    "failure": {"KB"},
+    "target_profile": {"TGT"},
+    "investigation": {"INV"},
+    "report": {"REP"},
+    "playbook": {"PB"},
+}
+
 ID_REGEX = re.compile(r"^(KB|TGT|REP|INV|PB)-[A-Za-z0-9_-]+$")
 DATE_REGEX = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -119,21 +130,90 @@ class BountyRecord:
 # Frontmatter Parser (Standard Library YAML Subset)
 # ==============================================================================
 
+def strip_comment(text: str) -> str:
+    """Strips trailing # comment only when # occurs outside quotes."""
+    in_single = False
+    in_double = False
+    escape = False
+    for i, ch in enumerate(text):
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"' and not in_single:
+            in_double = not in_double
+        elif ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == "#" and not in_single and not in_double:
+            return text[:i].rstrip()
+    return text.rstrip()
+
+
+def split_inline_list(inner: str) -> list[str]:
+    """Splits an inline list [a, b, c] on commas occurring outside quotes."""
+    items: list[str] = []
+    current: list[str] = []
+    in_single = False
+    in_double = False
+    escape = False
+
+    for ch in inner:
+        if escape:
+            current.append(ch)
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            current.append(ch)
+            continue
+        if ch == '"' and not in_single:
+            in_double = not in_double
+            current.append(ch)
+        elif ch == "'" and not in_double:
+            in_single = not in_single
+            current.append(ch)
+        elif ch == "," and not in_single and not in_double:
+            token = "".join(current).strip()
+            if token:
+                items.append(token)
+            current = []
+        else:
+            current.append(ch)
+
+    last_token = "".join(current).strip()
+    if last_token:
+        items.append(last_token)
+
+    cleaned_items: list[str] = []
+    for token in items:
+        clean = token.strip()
+        if (clean.startswith('"') and clean.endswith('"')) or (
+            clean.startswith("'") and clean.endswith("'")
+        ):
+            clean = clean[1:-1]
+        if clean:
+            cleaned_items.append(clean)
+    return cleaned_items
+
+
 def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     """
     Parses frontmatter delimited by opening and closing '---'.
     Returns (metadata_dict, body_markdown).
     """
-    pattern = re.compile(r"^\s*---\r?\n(.*?)\r?\n---\r?\n(.*)$", re.DOTALL)
+    text = text.lstrip("\ufeff")
+    pattern = re.compile(r"^\s*---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n(.*))?$", re.DOTALL)
     match = pattern.match(text)
     if not match:
         raise ValueError("Missing or invalid frontmatter delimiter (expected opening and closing '---')")
 
     raw_yaml = match.group(1)
-    body = match.group(2)
+    body = match.group(2) if match.group(2) is not None else ""
 
     metadata: dict[str, Any] = {}
-    current_list_key: str | None = None
+    pending_list_key: str | None = None
 
     lines = raw_yaml.splitlines()
     for line in lines:
@@ -144,15 +224,24 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
             continue
 
         # Handle list item continuation under multiline list
-        if stripped.startswith("- ") and current_list_key is not None:
+        if stripped.startswith("- "):
             item_val = stripped[2:].strip()
-            # Remove surrounding quotes if present
+            item_val = strip_comment(item_val)
             if (item_val.startswith('"') and item_val.endswith('"')) or (
                 item_val.startswith("'") and item_val.endswith("'")
             ):
                 item_val = item_val[1:-1]
-            metadata[current_list_key].append(item_val)
+            if pending_list_key is not None:
+                if pending_list_key not in metadata or not isinstance(metadata[pending_list_key], list):
+                    metadata[pending_list_key] = []
+                metadata[pending_list_key].append(item_val)
             continue
+
+        # If a pending list key was waiting for items and a non-list item is met, resolve it as None
+        if pending_list_key is not None:
+            if pending_list_key not in metadata:
+                metadata[pending_list_key] = None
+            pending_list_key = None
 
         # Key-value pair parsing
         if ":" in line:
@@ -160,22 +249,12 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
             key = parts[0].strip()
             val_str = parts[1].strip()
 
-            # Ignore inline comments if not quoted
-            if "#" in val_str and not (
-                (val_str.startswith('"') and val_str.endswith('"'))
-                or (val_str.startswith("'") and val_str.endswith("'"))
-            ):
-                # Basic comment stripping outside quotes
-                comment_idx = val_str.find("#")
-                val_str = val_str[:comment_idx].strip()
+            val_str = strip_comment(val_str)
 
             if not val_str:
-                # Multiline list or empty field
-                current_list_key = key
-                metadata[key] = []
+                # Multiline list or empty field: mark pending
+                pending_list_key = key
                 continue
-
-            current_list_key = None
 
             # Inline List: [a, b, c]
             if val_str.startswith("[") and val_str.endswith("]"):
@@ -183,17 +262,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
                 if not inner:
                     metadata[key] = []
                 else:
-                    # Tokenize by comma respecting quotes
-                    items = []
-                    for token in re.split(r",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", inner):
-                        clean_token = token.strip()
-                        if (clean_token.startswith('"') and clean_token.endswith('"')) or (
-                            clean_token.startswith("'") and clean_token.endswith("'")
-                        ):
-                            clean_token = clean_token[1:-1]
-                        if clean_token:
-                            items.append(clean_token)
-                    metadata[key] = items
+                    metadata[key] = split_inline_list(inner)
                 continue
 
             # Null / None
@@ -228,6 +297,10 @@ def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
 
             # Plain string
             metadata[key] = val_str
+
+    if pending_list_key is not None:
+        if pending_list_key not in metadata:
+            metadata[pending_list_key] = None
 
     return metadata, body
 
@@ -274,9 +347,15 @@ def validate_record_metadata(meta: dict[str, Any], file_path: Path | str) -> tup
     if not ID_REGEX.match(rec_id):
         errors.append(f"Invalid id format '{rec_id}'. Must match pattern: ^(KB|TGT|REP|INV|PB)-[A-Za-z0-9_-]+$")
 
-    title = str(meta.get("title", "")).strip()
-    if len(title) < 3:
-        errors.append("Field 'title' must be at least 3 characters long.")
+    raw_title = meta.get("title")
+    if not isinstance(raw_title, str):
+        errors.append("Field 'title' must be a string.")
+    else:
+        if "\n" in raw_title or "\r" in raw_title:
+            errors.append("Field 'title' must be a single line without newlines.")
+        title = raw_title.strip()
+        if len(title) < 5 or len(title) > 140:
+            errors.append(f"Field 'title' must be between 5 and 140 characters long (got {len(title)}).")
 
     target = str(meta.get("target", "")).strip()
     if not target:
@@ -299,6 +378,15 @@ def validate_record_metadata(meta: dict[str, Any], file_path: Path | str) -> tup
     if doc_type not in ALLOWED_TYPES:
         errors.append(f"Invalid type '{doc_type}'. Allowed: {sorted(ALLOWED_TYPES)}")
 
+    # Check ID prefix matches document type
+    if doc_type in TYPE_ID_PREFIX_MAPPING and "-" in rec_id:
+        prefix = rec_id.split("-", 1)[0]
+        allowed_prefixes = TYPE_ID_PREFIX_MAPPING[doc_type]
+        if prefix not in allowed_prefixes:
+            errors.append(
+                f"ID prefix '{prefix}' does not match document type '{doc_type}' (expected one of {sorted(allowed_prefixes)})."
+            )
+
     status = str(meta.get("status", ""))
     if status not in ALLOWED_STATUSES:
         errors.append(f"Invalid status '{status}'. Allowed: {sorted(ALLOWED_STATUSES)}")
@@ -311,18 +399,44 @@ def validate_record_metadata(meta: dict[str, Any], file_path: Path | str) -> tup
     if cvss is not None:
         try:
             cvss_val = float(cvss)
-            if not (0.0 <= cvss_val <= 10.0):
+            if not math.isfinite(cvss_val):
+                errors.append(f"cvss_score '{cvss}' must be a finite numeric value.")
+            elif not (0.0 <= cvss_val <= 10.0):
                 errors.append(f"cvss_score '{cvss_val}' out of bounds (must be between 0.0 and 10.0).")
         except (ValueError, TypeError):
             errors.append(f"cvss_score '{cvss}' must be a float or null.")
 
     payout = meta.get("bounty_payout")
+    payout_valid = False
+    payout_val = 0.0
     try:
         payout_val = float(payout)
-        if payout_val < 0:
+        if not math.isfinite(payout_val):
+            errors.append(f"bounty_payout '{payout}' must be a finite numeric value.")
+        elif payout_val < 0:
             errors.append(f"bounty_payout '{payout_val}' cannot be negative.")
+        else:
+            payout_valid = True
     except (ValueError, TypeError):
         errors.append(f"bounty_payout '{payout}' must be a numeric value >= 0.")
+
+    if payout_valid:
+        if status == "Rewarded" and payout_val <= 0.0:
+            errors.append(
+                f"Record with status 'Rewarded' must have a bounty_payout greater than 0 (got {payout_val})."
+            )
+        unrewarded_statuses = {
+            "Duplicate",
+            "Rejected",
+            "Out-of-Scope",
+            "Informative",
+            "Hunting",
+            "In-Triage",
+        }
+        if status in unrewarded_statuses and payout_val != 0.0:
+            errors.append(
+                f"Record with status '{status}' must have a bounty_payout of 0 (got {payout_val})."
+            )
 
     vuln_class = str(meta.get("vuln_class", "")).strip()
     if not vuln_class:
@@ -333,8 +447,9 @@ def validate_record_metadata(meta: dict[str, Any], file_path: Path | str) -> tup
         errors.append(f"Invalid root_cause_category '{root_cause}'. Allowed: {sorted(ALLOWED_ROOT_CAUSES)}")
 
     failure_reason = meta.get("failure_reason")
-    if failure_reason is not None and failure_reason not in ALLOWED_FAILURE_REASONS:
-        errors.append(f"Invalid failure_reason '{failure_reason}'. Allowed: {sorted(ALLOWED_FAILURE_REASONS)} or null")
+    if failure_reason is not None:
+        if not isinstance(failure_reason, str) or failure_reason not in ALLOWED_FAILURE_REASONS:
+            errors.append(f"Invalid failure_reason '{failure_reason}'. Allowed: {sorted(ALLOWED_FAILURE_REASONS)} or null")
 
     # Conditional Rule 1: failure type or failure status requires non-null failure_reason
     failure_statuses = {"Duplicate", "Rejected", "Out-of-Scope", "Informative"}
@@ -344,15 +459,25 @@ def validate_record_metadata(meta: dict[str, Any], file_path: Path | str) -> tup
                 f"failure_reason must be specified when type='{doc_type}' or status='{status}'."
             )
 
+    # Invariant: Rewarded status cannot have failure_reason
+    if status == "Rewarded" and failure_reason is not None:
+        errors.append(
+            f"Record with status 'Rewarded' cannot have a failure_reason (got '{failure_reason}')."
+        )
+
     # Techniques list
     techniques = meta.get("techniques")
     if not isinstance(techniques, list) or len(techniques) == 0:
         errors.append("Field 'techniques' must be a non-empty list of tags.")
+    elif not all(isinstance(t, str) and t.strip() for t in techniques):
+        errors.append("Field 'techniques' must contain only non-empty strings.")
 
     # Lessons learned list
     lessons = meta.get("lessons_learned")
     if not isinstance(lessons, list) or len(lessons) == 0:
         errors.append("Field 'lessons_learned' must be a non-empty list of bullet takeaways.")
+    elif not all(isinstance(l, str) and l.strip() for l in lessons):
+        errors.append("Field 'lessons_learned' must contain only non-empty strings.")
 
     return (len(errors) == 0), errors
 
@@ -386,7 +511,7 @@ def load_record_from_file(file_path: Path, repo_root: Path) -> tuple[BountyRecor
     Reads a markdown file, parses frontmatter, validates metadata, and builds BountyRecord.
     """
     try:
-        content = file_path.read_text(encoding="utf-8")
+        content = file_path.read_text(encoding="utf-8-sig")
     except Exception as e:
         return None, [f"Could not read file: {e}"]
 
@@ -521,7 +646,8 @@ def generate_index_markdown(records: list[BountyRecord], stats: dict[str, Any]) 
     for plat, count in stats["counts_by_platform"].items():
         bounty = stats["bounty_by_platform"].get(plat, 0.0)
         avg = (bounty / count) if count > 0 else 0.0
-        lines.append(f"| {plat} | {count} | ${bounty:,.2f} | ${avg:,.2f} |")
+        safe_plat = plat.replace("|", r"\|")
+        lines.append(f"| {safe_plat} | {count} | ${bounty:,.2f} | ${avg:,.2f} |")
 
     lines.extend([
         "",
@@ -533,7 +659,8 @@ def generate_index_markdown(records: list[BountyRecord], stats: dict[str, Any]) 
 
     for vc, count in stats["counts_by_vuln_class"].items():
         bounty = stats["bounty_by_vuln_class"].get(vc, 0.0)
-        lines.append(f"| {vc} | {count} | ${bounty:,.2f} |")
+        safe_vc = vc.replace("|", r"\|")
+        lines.append(f"| {safe_vc} | {count} | ${bounty:,.2f} |")
 
     lines.extend([
         "",
@@ -543,7 +670,8 @@ def generate_index_markdown(records: list[BountyRecord], stats: dict[str, Any]) 
         "| :--- | :---: |",
     ])
     for st, count in stats["counts_by_status"].items():
-        lines.append(f"| {st} | {count} |")
+        safe_st = st.replace("|", r"\|")
+        lines.append(f"| {safe_st} | {count} |")
 
     lines.extend([
         "",
@@ -565,9 +693,13 @@ def generate_index_markdown(records: list[BountyRecord], stats: dict[str, Any]) 
     for r in sorted_records:
         cvss_str = f"{r.cvss_score:.1f}" if r.cvss_score is not None else "-"
         bounty_str = f"${r.bounty_payout:,.0f}" if r.bounty_payout > 0 else "$0"
-        rel_link = f"[{r.file_path}](../{r.file_path})" if r.file_path.startswith("knowledge-base/") else f"[{r.file_path}](../{r.file_path})"
+        rel_link = f"[{r.file_path}](../{r.file_path})"
+        safe_title = r.title.replace("|", r"\|")
+        safe_target = r.target.replace("|", r"\|")
+        safe_platform = r.platform.replace("|", r"\|")
+        safe_vuln = r.vuln_class.replace("|", r"\|")
         lines.append(
-            f"| `{r.id}` | {r.title} | {r.target} | {r.platform} | `{r.type}` | `{r.status}` | {r.severity} | {cvss_str} | {bounty_str} | {r.vuln_class} | {rel_link} |"
+            f"| `{r.id}` | {safe_title} | {safe_target} | {safe_platform} | `{r.type}` | `{r.status}` | {r.severity} | {cvss_str} | {bounty_str} | {safe_vuln} | {rel_link} |"
         )
 
     lines.extend([
@@ -736,6 +868,10 @@ def cmd_new(
     """
     Generates a new markdown document from standard templates.
     """
+    if not ID_REGEX.match(record_id):
+        print(f"[ERROR] Invalid record_id '{record_id}'. Must match pattern: {ID_REGEX.pattern}")
+        return 1
+
     type_mapping = {
         "target_profile": ("templates/target_profile.md", f"targets/{record_id}.md"),
         "target": ("templates/target_profile.md", f"targets/{record_id}.md"),
@@ -746,7 +882,7 @@ def cmd_new(
         "post_mortem_success": ("templates/post_mortem_success.md", f"knowledge-base/successes/{record_id}.md"),
         "failure": ("templates/post_mortem_failure.md", f"knowledge-base/failures/{record_id}.md"),
         "post_mortem_failure": ("templates/post_mortem_failure.md", f"knowledge-base/failures/{record_id}.md"),
-        "playbook": ("templates/post_mortem_success.md", f"knowledge-base/vuln-playbooks/{record_id}.md"),
+        "playbook": ("templates/playbook.md", f"knowledge-base/vuln-playbooks/{record_id}.md"),
     }
 
     normalized_type = doc_type.lower()
@@ -755,8 +891,17 @@ def cmd_new(
         return 1
 
     template_rel, dest_rel = type_mapping[normalized_type]
-    template_path = repo_root / template_rel
-    dest_path = repo_root / dest_rel
+    template_path = (repo_root / template_rel).resolve()
+    dest_path = (repo_root / dest_rel).resolve()
+    resolved_root = repo_root.resolve()
+
+    try:
+        if not dest_path.is_relative_to(resolved_root):
+            print(f"[ERROR] Path traversal detected: destination '{dest_path}' is outside repository root.")
+            return 1
+    except (ValueError, AttributeError):
+        print(f"[ERROR] Path traversal detected: destination '{dest_path}' is outside repository root.")
+        return 1
 
     if not template_path.exists():
         print(f"[ERROR] Template file does not exist: {template_path}")

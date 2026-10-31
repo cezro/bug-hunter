@@ -193,6 +193,7 @@ class TestValidationEngine(unittest.TestCase):
         meta = self.valid_meta.copy()
         meta["type"] = "failure"
         meta["status"] = "Duplicate"
+        meta["bounty_payout"] = 0
         meta["failure_reason"] = None
         is_valid, errors = validate_record_metadata(meta, "test.md")
         self.assertFalse(is_valid)
