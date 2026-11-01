@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+
+# Temporary downloads and session cookies
+scratch/cf_cookies.txt
+scratch/app_bundle.js

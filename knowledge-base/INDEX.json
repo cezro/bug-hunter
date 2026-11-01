@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-10-31T06:31:42.614743+00:00",
-  "total_records": 5,
+  "generated_at": "2026-11-01T12:15:04.144703+00:00",
+  "total_records": 12,
   "metrics": {
     "total_earnings_usd": 3000.0,
-    "total_records": 5,
+    "total_records": 12,
     "total_resolved": 2,
     "total_rewarded": 1,
     "total_duplicates": 1,
@@ -13,19 +13,22 @@
     "average_reward_usd": 3000.0,
     "counts_by_type": {
       "failure": 1,
-      "playbook": 1,
+      "investigation": 2,
+      "playbook": 3,
+      "report": 2,
       "success": 1,
-      "target_profile": 2
+      "target_profile": 3
     },
     "counts_by_status": {
       "Duplicate": 1,
-      "Hunting": 3,
+      "Hunting": 8,
+      "In-Triage": 2,
       "Rewarded": 1
     },
     "counts_by_platform": {
-      "Bugcrowd": 2,
+      "Bugcrowd": 7,
       "HackerOne": 2,
-      "Other": 1
+      "Other": 3
     },
     "bounty_by_platform": {
       "Bugcrowd": 0.0,
@@ -33,39 +36,97 @@
       "Other": 0.0
     },
     "counts_by_severity": {
-      "High": 2,
+      "High": 8,
       "Medium": 1,
-      "None": 2
+      "None": 3
     },
     "counts_by_vuln_class": {
+      "CWE-285: Improper Authorization": 2,
       "CWE-362: Race Condition": 1,
       "CWE-639: IDOR": 2,
-      "N/A": 2
+      "CWE-639: IDOR / BOLA": 1,
+      "CWE-918: SSRF / CWE-639: IDOR / AI-Gateway-Abuse": 1,
+      "N/A": 5
     },
     "bounty_by_vuln_class": {
+      "CWE-285: Improper Authorization": 0.0,
       "CWE-362: Race Condition": 0.0,
       "CWE-639: IDOR": 3000.0,
+      "CWE-639: IDOR / BOLA": 0.0,
+      "CWE-918: SSRF / CWE-639: IDOR / AI-Gateway-Abuse": 0.0,
       "N/A": 0.0
     },
     "counts_by_root_cause": {
-      "Access Control": 2,
-      "N/A": 2,
+      "Access Control": 6,
+      "Business Logic": 1,
+      "Configuration": 1,
+      "N/A": 3,
       "Race Condition": 1
     },
     "top_techniques": {
-      "parameter-tampering": 2,
-      "horizontal-privilege-escalation": 2,
-      "asset-discovery": 2,
-      "tech-stack-fingerprinting": 2,
-      "api-surface-mapping": 2,
+      "parameter-tampering": 7,
+      "auth-context-switching": 5,
+      "api-surface-mapping": 5,
+      "asset-discovery": 4,
+      "tech-stack-fingerprinting": 4,
+      "ai-gateway-abuse": 3,
+      "horizontal-privilege-escalation": 3,
+      "ssrf-probing": 1,
       "parallel-requests": 1,
-      "coupon-abuse": 1,
-      "limit-overrun": 1,
-      "uuid-enumeration": 1,
-      "vertical-privilege-escalation": 1
+      "coupon-abuse": 1
     }
   },
   "records": [
+    {
+      "id": "INV-2026-001",
+      "title": "Arbitrary Enterprise LLM Model Selection & Unauthorized Consumption in Newfold AI Gateway",
+      "target": "OneWeb Platform",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "investigation",
+      "status": "Hunting",
+      "severity": "High",
+      "cvss_score": 7.5,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-285: Improper Authorization",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "auth-context-switching",
+        "ai-gateway-abuse"
+      ],
+      "lessons_learned": [
+        "AI Gateways often expose internal deployment parameters directly in client request bodies without server-side policy enforcement."
+      ],
+      "file_path": "investigations/INV-2026-001.md"
+    },
+    {
+      "id": "INV-2026-002",
+      "title": "HostGator LATAM AI Platform Security Evaluation",
+      "target": "HostGator LATAM",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "investigation",
+      "status": "Hunting",
+      "severity": "High",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-918: SSRF / CWE-639: IDOR / AI-Gateway-Abuse",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "api-surface-mapping",
+        "auth-context-switching",
+        "parameter-tampering",
+        "ssrf-probing"
+      ],
+      "lessons_learned": [
+        "SuperGator AI platform communicates with backend at https://ai-core.hostgator.com.br/api.",
+        "AWS AppSync GraphQL WebSocket is used for real-time agent events and temporary STS credentials issuance."
+      ],
+      "file_path": "investigations/INV-2026-002.md"
+    },
     {
       "id": "KB-2026-002",
       "title": "Duplicate Race Condition on Checkout Voucher Redemption",
@@ -144,6 +205,107 @@
       "file_path": "knowledge-base/vuln-playbooks/idor-access-control.md"
     },
     {
+      "id": "PB-CHAIN-01",
+      "title": "Multi-Stage Attack Chain Correlation & Vulnerability Prioritization",
+      "target": "Global",
+      "platform": "Other",
+      "date": "2026-10-31",
+      "type": "playbook",
+      "status": "Hunting",
+      "severity": "High",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "N/A",
+      "root_cause_category": "Business Logic",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "auth-context-switching",
+        "ai-gateway-abuse"
+      ],
+      "lessons_learned": [
+        "Isolated Medium findings often get closed as informative; chaining two Medium findings into an end-to-end exploit unlocks High/Critical bounties.",
+        "Always tailor tooling and probing parameters to the detected technology stack rather than firing generic payloads.",
+        "Enforce adaptive timing profiles (e.g., Conservative/Stealth) when Cloudflare or Akamai is detected to prevent IP bans."
+      ],
+      "file_path": "knowledge-base/vuln-playbooks/PB-CHAIN-01.md"
+    },
+    {
+      "id": "PB-RECON-01",
+      "title": "Continuous Automated Recon & Attack Surface Monitoring",
+      "target": "Global",
+      "platform": "Other",
+      "date": "2026-10-31",
+      "type": "playbook",
+      "status": "Hunting",
+      "severity": "High",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "N/A",
+      "root_cause_category": "Configuration",
+      "failure_reason": null,
+      "techniques": [
+        "asset-discovery",
+        "tech-stack-fingerprinting",
+        "api-surface-mapping"
+      ],
+      "lessons_learned": [
+        "Automation replaces repetitive busywork; hackers win bug bounties by catching new and untested assets first.",
+        "Never run full port scans on hundreds of hosts upfront; use smart two-tiered scanning (top 1000 first, full ports only on anomalies).",
+        "Visual recon via automated screenshots enables spotting internal portals and staging APIs in seconds instead of hours."
+      ],
+      "file_path": "knowledge-base/vuln-playbooks/PB-RECON-01.md"
+    },
+    {
+      "id": "REP-2026-001",
+      "title": "Improper Authorization in POST /ai-api/v3.0/chat allows Arbitrary Enterprise LLM Deployment Selection and Quota Exhaustion",
+      "target": "OneWeb Platform",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "report",
+      "status": "In-Triage",
+      "severity": "High",
+      "cvss_score": 7.1,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-285: Improper Authorization",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "auth-context-switching",
+        "ai-gateway-abuse"
+      ],
+      "lessons_learned": [
+        "Client-supplied deployment identifiers must never be forwarded directly to backend LLM cloud endpoints."
+      ],
+      "file_path": "reports/REP-2026-001.md"
+    },
+    {
+      "id": "REP-2026-002",
+      "title": "BOLA in AI Agent Credentials Endpoint leads to AWS AppSync Session Token Exposure",
+      "target": "HostGator LATAM",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "report",
+      "status": "In-Triage",
+      "severity": "High",
+      "cvss_score": 8.5,
+      "bounty_payout": 0.0,
+      "vuln_class": "CWE-639: IDOR / BOLA",
+      "root_cause_category": "Access Control",
+      "failure_reason": null,
+      "techniques": [
+        "parameter-tampering",
+        "horizontal-privilege-escalation",
+        "auth-context-switching"
+      ],
+      "lessons_learned": [
+        "SuperGator AI platform exposes direct IAM credential generation endpoints per agentId.",
+        "Object-level authorization must be enforced in Laravel policy prior to STS credential synthesis."
+      ],
+      "file_path": "reports/REP-2026-002.md"
+    },
+    {
       "id": "TGT-ACME-01",
       "title": "Acme Cloud Services Target Profile",
       "target": "Acme Cloud Services",
@@ -166,6 +328,32 @@
         "Billing and background export queues have historically contained tenant authorization flaws."
       ],
       "file_path": "targets/TGT-ACME-01.md"
+    },
+    {
+      "id": "TGT-HG-LATAM-01",
+      "title": "HostGator LATAM Profile",
+      "target": "HostGator LATAM",
+      "platform": "Bugcrowd",
+      "date": "2026-10-31",
+      "type": "target_profile",
+      "status": "Hunting",
+      "severity": "None",
+      "cvss_score": null,
+      "bounty_payout": 0.0,
+      "vuln_class": "N/A",
+      "root_cause_category": "N/A",
+      "failure_reason": null,
+      "techniques": [
+        "asset-discovery",
+        "tech-stack-fingerprinting",
+        "ai-agent-auditing",
+        "api-surface-mapping"
+      ],
+      "lessons_learned": [
+        "Target has newly prioritized AI Agents and AI-driven VPS features.",
+        "carrinho.hostgator.com.br is explicitly out of scope per brief update."
+      ],
+      "file_path": "targets/TGT-HG-LATAM-01.md"
     },
     {
       "id": "TGT-ONEWEB-01",

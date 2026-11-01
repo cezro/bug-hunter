@@ -68,23 +68,40 @@ Execute structured, non-destructive reconnaissance and multi-agent exploration a
 - Route to [`agent-reach`](file:///.agents/skills/agent-reach/SKILL.md) to search public HackerOne disclosures, GitHub commit logs, developer blogs, changelogs, and security advisories related to the target.
 - Identify known past vulnerability patterns (e.g., IDOR on user exports, race condition on wallet balance, GraphQL introspection leaks).
 
-#### 2.2 Safe Surface Mapping & Fingerprinting
-- Route to [`security-bounty-hunter`](file:///.agents/skills/security-bounty-hunter/SKILL.md) and [`bb-methodology`](file:///.agents/skills/bb-methodology/SKILL.md) for passive/active fingerprinting:
-  - WAF / Edge CDN (Cloudflare, AWS CloudFront, Fastly, Akamai).
-  - API architecture (REST, GraphQL, gRPC, WebSocket).
-  - Auth mechanisms (OAuth2/OIDC, JWT RS256/HS256, SAML, session cookies).
-- Record findings into `targets/TGT-<ID>.md`.
+#### 2.2 Continuous 3-Pillar Recon & Surface Mapping (CyberFlow Methodology)
+- Route to [`security-bounty-hunter`](file:///.agents/skills/security-bounty-hunter/SKILL.md), [`bb-methodology`](file:///.agents/skills/bb-methodology/SKILL.md), and playbook [`PB-RECON-01`](file:///c:/Users/Zero/Documents/GitHub%20Repositories/bug-hunter/knowledge-base/vuln-playbooks/PB-RECON-01.md):
+  1. **Subdomain Discovery & 24/7 Delta Monitoring:**
+     - Multi-source aggregation (`subfinder`, `amass`, `assetfinder`, `crt.sh`).
+     - Daily baseline diffing: `diff(today, yesterday)` to instantly flag new, untested assets (highest probability of bugs).
+  2. **Smart Tiered Port Scanning & Liveness Pre-Filtering:**
+     - Pre-filter alive hosts with `httpx` (never scan dead hosts).
+     - Tier 1: Fast top 1000 ports (~2 min/host).
+     - Tier 2: Deep 1-65535 scan exclusively on anomalous listening ports (8080, 8443, 8000, 9000).
+     - Automated vulnerability auditing using `nuclei` templates (exposed Git, Swagger/OpenAPI docs, unpatched CVEs).
+  3. **Visual Recon & Tech Stack Profiling:**
+     - Headless automated screenshot gallery (`EyeWitness` / `scripts/recon_pipeline.py`).
+     - Rapid visual triage: identify admin portals, unauthenticated staging APIs, and directory listings in seconds.
+     - Tech stack profiling (Wappalyzer / header analysis) to match targets to optimal vulnerability classes.
+- Record findings into `targets/TGT-<ID>.md`. Execute via:
+  ```bash
+  python scripts/recon_pipeline.py <domain> --slug <SLUG>
+  ```
 
-#### 2.3 Swarm Root-Cause Exploration & Anomaly Detection
-- When an anomalous behavior or potential flaw is detected, route to [`bug-hunt-swarm`](file:///.agents/skills/bug-hunt-swarm/SKILL.md).
+#### 2.3 Swarm Root-Cause Exploration & Attack Chain Discovery (HexStrike AI Methodology)
+- When anomalous behavior or target fingerprints are detected, run the HexStrike Tactical Decision Engine:
+  ```bash
+  python scripts/hexstrike_decision.py <domain> --tech <STACK>
+  ```
+- Route to [`bug-hunt-swarm`](file:///.agents/skills/bug-hunt-swarm/SKILL.md) and playbook [`PB-CHAIN-01`](file:///c:/Users/Zero/Documents/GitHub%20Repositories/bug-hunter/knowledge-base/vuln-playbooks/PB-CHAIN-01.md):
 - Scaffold an investigation note:
   ```bash
   python scripts/index_manager.py new investigation INV-2026-XXX --title "<Hypothesis Title>" --target "<Target>"
   ```
-- Swarm agents independently investigate hypotheses:
-  - Agent A: Access control boundary checks (IDOR, role escalation).
-  - Agent B: Input sanitation & logic flow (SSRF, business logic flaws).
-  - Agent C: Race conditions & state synchronization.
+- Swarm agents independently investigate and correlate findings according to the **HexStrike 10-Tier Priority Hierarchy**:
+  - **Tier 10-9 (Critical):** RCE (SSTI, deserialization) & SQLi.
+  - **Tier 8 (High):** IDOR/BOLA, SSRF, AI Gateway Abuse (arbitrary model routing), and Auth Bypass.
+  - **Tier 7 (High):** XXE and Business Logic Race Conditions (limit-overruns).
+  - **Attack Chain Discovery:** Correlate isolated Medium anomalies (e.g. CORS preauth token leaks + AI model injection) into High/Critical severity chains.
 
 #### 2.4 Pre-Submission Triage & Falsification Gate
 - Before drafting any report, route to [`triage-validation`](file:///.agents/skills/triage-validation/SKILL.md).
